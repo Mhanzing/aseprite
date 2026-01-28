@@ -6,7 +6,8 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout del codice
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
     
@@ -15,8 +16,8 @@ jobs:
         curl -L -o skia.zip https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
         7z x skia.zip -oskia
         
-    - name: Imposta Ninja
-      uses: seanmiddleditch/gha-setup-ninja@v3
+    - name: Imposta Ninja (Incluso in Windows-latest)
+      run: ninja --version
 
     - name: Imposta MSVC (Visual Studio)
       uses: ilammy/msvc-dev-cmd@v1
@@ -32,11 +33,11 @@ jobs:
       run: |
         mkdir Aseprite
         copy build\bin\aseprite.exe Aseprite\
-        copy -r data Aseprite\data
+        xcopy /E /I data Aseprite\data
         7z a Aseprite-Build.zip Aseprite
 
     - name: Carica il risultato
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Aseprite-Windows
         path: Aseprite-Build.zip
