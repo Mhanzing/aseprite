@@ -1,0 +1,42 @@
+name: Compila Aseprite Windows
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    
+    - name: Scarica Skia
+      run: |
+        curl -L -o skia.zip https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
+        7z x skia.zip -oskia
+        
+    - name: Imposta Ninja
+      uses: seanmiddleditch/gha-setup-ninja@v3
+
+    - name: Imposta MSVC (Visual Studio)
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Genera Progetto (CMake)
+      run: |
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=./skia -DSKIA_LIBRARY_DIR=./skia/out/Release-x64 -DSKIA_LIBRARY=./skia/out/Release-x64/skia.lib
+    
+    - name: Compila Aseprite
+      run: ninja -C build aseprite
+
+    - name: Prepara lo Zip
+      run: |
+        mkdir Aseprite
+        copy build\bin\aseprite.exe Aseprite\
+        copy -r data Aseprite\data
+        7z a Aseprite-Build.zip Aseprite
+
+    - name: Carica il risultato
+      uses: actions/upload-artifact@v3
+      with:
+        name: Aseprite-Windows
+        path: Aseprite-Build.zip
